@@ -955,7 +955,7 @@ function drawFinalScene() {
     background(255, 240, 245);
     
     if (showingMessage) {
-        // Show the letter message - CENTERED
+        // Show the letter message - CENTERED on pink background
         push();
         fill(255, 248, 220);
         stroke(0);
@@ -964,39 +964,19 @@ function drawFinalScene() {
         let msgH = height * 0.7;
         rectMode(CENTER);
         rect(width/2, height/2, msgW, msgH, 10);
-
+        
         fill(0);
         noStroke();
         textSize(24);
         textAlign(CENTER, CENTER);
         textFont('Georgia');
-        text("Dear Mao,", width/2, height/2);
+        text("[INSERT MESSAGE]", width/2, height/2);
         pop();
     } else {
-        // Show cake with decorations and envelope
+        // Show just the envelope - big and centered
         push();
-        
-        let cakeX = width / 2;
-        let cakeY = height / 2 - 200; // Move cake up to make room for envelope
-        
-        // Draw cake
         imageMode(CENTER);
-        image(cakeImg, cakeX, cakeY, CAKE_WIDTH, CAKE_HEIGHT);
-        
-        // Draw cake decorations
-        imageMode(CORNER);
-        image(cakeCanvas, cakeX - CAKE_WIDTH/2, cakeY - CAKE_HEIGHT/2);
-        
-        // Draw strawberries (adjust their Y position)
-        imageMode(CENTER);
-        for (let strawberry of strawberries) {
-            let adjustedY = strawberry.y - 200; // Match cake adjustment
-            image(strawberryImg, strawberry.x, adjustedY, 216, 216);
-        }
-        
-        // Draw envelope (centered below cake)
-        image(envelopeImg, width/2, cakeY + CAKE_HEIGHT/2 + 300, 500, 500);
-        
+        image(envelopeImg, width/2, height/2, 600, 600);
         pop();
     }
 }
@@ -1006,11 +986,10 @@ function mousePressed4() {
         // Close message
         showingMessage = false;
     } else {
-        // Check if envelope was clicked
-        let cakeY = height / 2 - 200;
+        // Check if envelope was clicked (centered on screen)
         let envX = width / 2;
-        let envY = cakeY + CAKE_HEIGHT/2 + 300;
-        let envSize = 500;
+        let envY = height / 2;
+        let envSize = 600;
         
         if (dist(mouseX, mouseY, envX, envY) < envSize / 2) {
             showingMessage = true;
