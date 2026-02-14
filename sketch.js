@@ -53,11 +53,30 @@ let dialogueSets = {
     ]
 };
 
+let final_message = `
+Dear Mao,
+
+Where do I even start? 
+
+I love your smile. I love your laugh. I love the way you furrow your eyebrows when you're thinking real hard.
+
+I love our 4-hour calls. I love our incessant texting. I love hanging out with you.
+
+I love the way you always do your very best. I love how you never give up no matter how late in the night you're working. I love how you never fail to make everyone around you so much happier.
+
+I love you.
+
+Happy Valentine's Day, Mao.
+
+Love,
+White Mamba
+`
+
 // Game 1: Luvdisc variables
 let luvdiscImg, luvdiscChocImg, chocoBoxImg;
 let luvdiscs = [];
 let chocolatesCollected = 0;
-const TOTAL_CHOCOLATES = 8;
+const TOTAL_CHOCOLATES = 5;
 const SPAWN_INTERVAL = 60;
 let frameCounter = 0;
 
@@ -943,23 +962,22 @@ function drawFinalScene() {
         strokeWeight(3);
         let msgW = width * 0.7;
         let msgH = height * 0.7;
-        rectMode(CENTER); // Use CENTER mode for proper centering
+        rectMode(CENTER);
         rect(width/2, height/2, msgW, msgH, 10);
-        
+
         fill(0);
         noStroke();
         textSize(24);
         textAlign(CENTER, CENTER);
         textFont('Georgia');
-        text("[INSERT MESSAGE]", width/2, height/2);
+        text("Dear Mao,", width/2, height/2);
         pop();
     } else {
-        // Show cake with decorations, bouquet, fancy box, and envelope
+        // Show cake with decorations and envelope
         push();
         
-        // Calculate positions - cake needs to be higher to make room for envelope
         let cakeX = width / 2;
-        let cakeY = height / 2 - 150; // Moved up
+        let cakeY = height / 2 - 200; // Move cake up to make room for envelope
         
         // Draw cake
         imageMode(CENTER);
@@ -969,22 +987,15 @@ function drawFinalScene() {
         imageMode(CORNER);
         image(cakeCanvas, cakeX - CAKE_WIDTH/2, cakeY - CAKE_HEIGHT/2);
         
-        // Draw strawberries (need to adjust their positions too)
+        // Draw strawberries (adjust their Y position)
         imageMode(CENTER);
         for (let strawberry of strawberries) {
-            // Strawberries were placed relative to old cake position, adjust them
-            let adjustedY = strawberry.y - 150;
+            let adjustedY = strawberry.y - 200; // Match cake adjustment
             image(strawberryImg, strawberry.x, adjustedY, 216, 216);
         }
         
-        // Draw bouquet (to the right of cake)
-        image(bouquetImg, cakeX + CAKE_WIDTH/2 + 150, cakeY, 300, 300);
-        
-        // Draw fancy box (to the left of cake)
-        image(fancyBoxImg, cakeX - CAKE_WIDTH/2 - 150, cakeY, 300, 300);
-        
-        // Draw envelope (below cake, centered)
-        image(envelopeImg, width/2, cakeY + CAKE_HEIGHT/2 + 250, 400, 400);
+        // Draw envelope (centered below cake)
+        image(envelopeImg, width/2, cakeY + CAKE_HEIGHT/2 + 300, 500, 500);
         
         pop();
     }
@@ -996,9 +1007,10 @@ function mousePressed4() {
         showingMessage = false;
     } else {
         // Check if envelope was clicked
+        let cakeY = height / 2 - 200;
         let envX = width / 2;
-        let envY = height / 2 + 300;
-        let envSize = 400;
+        let envY = cakeY + CAKE_HEIGHT/2 + 300;
+        let envSize = 500;
         
         if (dist(mouseX, mouseY, envX, envY) < envSize / 2) {
             showingMessage = true;
