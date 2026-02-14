@@ -17,11 +17,11 @@ let growingRedImg, growingBlueImg;
 let bloomRedImg, bloomBlueImg;
 let waterPotImg, waterPotPouringImg;
 let plants = [];
-const GRID_SIZE = 5;
+const GRID_SIZE = 3;
 const BLUE_ROSE_COUNT = 8;
 let wateringPlant = null;
 let wateringProgress = 0;
-const WATERING_TIME = 90; // frames to water (1.5 seconds at 60fps)
+const WATERING_TIME = 45; // frames to water (1.5 seconds at 60fps)
 
 // ============================================
 // PRELOAD
