@@ -197,7 +197,7 @@ function drawDialogue() {
     textFont('Arial');
     
     let margin = 30;
-    let textWidth = width - margin * 2;
+    let maxWidth = width - margin * 2; // FIXED: Changed variable name
     let words = currentDialogueSet[dialogueIndex].split(' ');
     let line = '';
     let y = height - boxHeight + margin;
@@ -205,8 +205,8 @@ function drawDialogue() {
     
     for (let word of words) {
         let testLine = line + word + ' ';
-        let testWidth = textWidth(testLine);
-        if (testWidth > width - margin * 2) {
+        let testWidth = textWidth(testLine); // Now this works correctly
+        if (testWidth > maxWidth) {
             lines.push(line);
             line = word + ' ';
         } else {
