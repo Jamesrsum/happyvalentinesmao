@@ -6,18 +6,15 @@ const SPAWN_INTERVAL = 60; // frames between spawns
 let frameCounter = 0;
 
 function preload() {
-    luvdiscImg = loadImage('images/luvdisc.png', 
-        () => console.log('✓ Luvdisc loaded'),
-        () => console.log('✗ Luvdisc FAILED')
-    );
-    luvdiscChocImg = loadImage('images/luvdisc_choc.png',
-        () => console.log('✓ Luvdisc choc loaded'),
-        () => console.log('✗ Luvdisc choc FAILED')
-    );
-    chocoBoxImg = loadImage('images/choco_box.png',
-        () => console.log('✓ Choco box loaded'),
-        () => console.log('✗ Choco box FAILED')
-    );
+    luvdiscImg = loadImage('images/luvdisc.png');
+    luvdiscChocImg = loadImage('images/luvdisc_choc.png');
+    chocoBoxImg = loadImage('images/choco_box.png');
+    
+    // Fallback: if choc image fails, use regular image
+    luvdiscChocImg.onError = function() {
+        console.log('ERROR: Could not load luvdisc_choc.png');
+        luvdiscChocImg = luvdiscImg; // Use regular as backup
+    };
 }
 
 function setup() {
@@ -165,16 +162,8 @@ class Luvdisc {
         let squish = 1 + sin(this.swimPhase) * 0.05;
         scale(1, squish);
         
-        // TESTING: Force chocolate image for ALL luvdiscs
-        let img = luvdiscChocImg;
-        
-        // Draw a colored circle behind to see which have chocolate
-        if (this.hasChocolate) {
-            fill(255, 0, 0, 100); // Red circle for chocolate ones
-            noStroke();
-            ellipse(0, 0, this.size + 10, this.size + 10);
-        }
-        
+        // Draw appropriate sprite based on whether it has chocolate
+        let img = this.hasChocolate ? luvdiscChocImg : luvdiscImg;
         image(img, 0, 0, this.size, this.size);
         
         pop();
