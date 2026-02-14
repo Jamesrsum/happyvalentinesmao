@@ -1,7 +1,7 @@
 // ============================================
 // GLOBAL VARIABLES
 // ============================================
-let currentGame = 0; // 0 = dialogue, 1 = Luvdisc, 2 = Garden, 3 = Cake
+let currentGame = 0; // 0 = dialogue, 1 = Luvdisc, 2 = Garden, 3 = Cake, 4 = Final
 
 // Dialogue system
 let nurseImg;
@@ -37,6 +37,19 @@ let dialogueSets = {
     game3_intro: [
         "Alcremie wants us to help her design a cake!",
         "We have icing and strawberries. Design away!"
+    ],
+    game3_complete: [
+        "That looks beautiful, Mao :)"
+    ],
+    final: [
+        "Looks like we have everything!",
+        "...",
+        "Wait a second...who is all of this for again??",
+        "Whoever it is, this person must mean the world to James...",
+        "Hold on there's something in my pocket...what is it-",
+        "To...Mao?! This was all for you!?!",
+        "You know what I'm not surprised. James won't stop talking about you.",
+        "I think this belongs to you."
     ]
 };
 
@@ -53,25 +66,39 @@ let potImg, sproutImg;
 let growingRedImg, growingBlueImg;
 let bloomRedImg, bloomBlueImg;
 let waterPotImg, waterPotPouringImg;
+let roseliaImg;
 let plants = [];
-const GRID_SIZE = 3; // Changed to 3x3
-const BLUE_ROSE_COUNT = 4; // Changed to 4
+const GRID_SIZE = 3;
+const BLUE_ROSE_COUNT = 4;
 let wateringPlant = null;
 let wateringProgress = 0;
-const WATERING_TIME = 35; // Changed to 35
-let game2Phase = 'watering'; // 'watering' or 'collecting'
+const WATERING_TIME = 35;
+let game2Phase = 'watering';
+let roseliaCorner = 0; // 0=TL, 1=TR, 2=BR, 3=BL
+let roseliaRotation = 0;
+let roseliaRotationDirection = 1;
+let roseliaTimer = 0;
 
 // Game 3: Cake variables
 let cakeImg, icingImg, strawberryImg;
+let alcremieImg;
 let cakeCanvas;
 let decorationMode = 'icing';
 let strawberries = [];
 let prevMouseX, prevMouseY;
-const CAKE_WIDTH = 1440; // 2x bigger (600) then 20% wider
-const CAKE_HEIGHT = 1000; // 2x bigger
+const CAKE_WIDTH = 1440;
+const CAKE_HEIGHT = 900; // 10% smaller (was 1000)
 const BASE_ICING_THICKNESS = 18;
 let icingThickness = BASE_ICING_THICKNESS;
-let icingSliderValue = 1.0; // Multiplier for icing thickness
+let icingSliderValue = 1.0;
+let alcremieCorner = 0;
+let alcremieRotation = 0;
+let alcremieRotationDirection = 1;
+let alcremieTimer = 0;
+
+// Final scene variables
+let bouquetImg, fancyBoxImg, envelopeImg;
+let showingMessage = false;
 
 // ============================================
 // PRELOAD
@@ -85,10 +112,19 @@ function preload() {
     luvdiscChocImg = loadImage('images/luvdisc_choc.png');
     chocoBoxImg = loadImage('images/choco_box.png');
     
+    // Game 2 images
+    roseliaImg = loadImage('images/roselia.png');
+    
     // Game 3 images
     cakeImg = loadImage('images/cake.png');
     icingImg = loadImage('images/icing.png');
     strawberryImg = loadImage('images/strawberry.png');
+    alcremieImg = loadImage('images/alcremie.png');
+    
+    // Final scene images
+    bouquetImg = loadImage('images/bouquet.png');
+    fancyBoxImg = loadImage('images/fancy_box.png');
+    envelopeImg = loadImage('images/envelope.png');
 }
 
 // ============================================
@@ -98,7 +134,6 @@ function setup() {
     createCanvas(windowWidth, windowHeight - 50);
     imageMode(CENTER);
     
-    // Start with intro dialogue
     startDialogue('intro');
 }
 
@@ -118,8 +153,9 @@ function draw() {
         drawGame2();
     } else if (currentGame === 3) {
         drawGame3();
+    } else if (currentGame === 4) {
+        drawFinalScene();
     } else {
-        // Pink blank screen
         background(255, 192, 203);
     }
 }
@@ -135,17 +171,17 @@ function startDialogue(setName) {
 }
 
 function drawDialogue() {
-    // Pink background
     background(255, 192, 203);
     
-    // Draw Nurse Joy sprite (bottom left)
+    // Draw Nurse Joy sprite (bottom left, 60% wider)
     push();
     imageMode(CORNER);
-    let nurseSize = min(width, height) * 0.4;
-    image(nurseImg, 20, height - nurseSize - 20, nurseSize, nurseSize);
+    let nurseHeight = min(width, height) * 0.4;
+    let nurseWidth = nurseHeight * 1.6; // 60% wider
+    image(nurseImg, 20, height - nurseHeight - 20, nurseWidth, nurseHeight);
     pop();
     
-    // Draw dialogue box (bottom, full width)
+    // Draw dialogue box
     push();
     fill(255);
     stroke(0);
@@ -160,30 +196,34 @@ function drawDialogue() {
     textAlign(LEFT, TOP);
     textFont('Arial');
     
-    // Word wrap
     let margin = 30;
     let textWidth = width - margin * 2;
     let words = currentDialogueSet[dialogueIndex].split(' ');
     let line = '';
     let y = height - boxHeight + margin;
+    let lines = [];
     
     for (let word of words) {
         let testLine = line + word + ' ';
-        if (textWidth < textWidth && textWidth(testLine) > textWidth - margin * 2) {
-            text(line, margin, y);
+        let testWidth = textWidth(testLine);
+        if (testWidth > width - margin * 2) {
+            lines.push(line);
             line = word + ' ';
-            y += 30;
         } else {
             line = testLine;
         }
     }
-    text(line, margin, y);
+    lines.push(line);
     
-    // Click prompt
-    fill(100);
-    textSize(16);
+    for (let i = 0; i < lines.length; i++) {
+        text(lines[i], margin, y + i * 30);
+    }
+    
+    // Draw ▼ symbol at the end
+    fill(0);
+    textSize(20);
     textAlign(RIGHT, BOTTOM);
-    text("Click to continue...", width - margin, height - margin);
+    text("▼", width - margin, height - margin);
     
     pop();
 }
@@ -192,14 +232,12 @@ function advanceDialogue() {
     dialogueIndex++;
     
     if (dialogueIndex >= currentDialogueSet.length) {
-        // Dialogue set complete
         dialogueActive = false;
         handleDialogueComplete();
     }
 }
 
 function handleDialogueComplete() {
-    // Determine what happens after dialogue ends
     if (currentDialogueSet === dialogueSets.intro) {
         startDialogue('game1_intro');
     } else if (currentDialogueSet === dialogueSets.game1_intro) {
@@ -211,15 +249,20 @@ function handleDialogueComplete() {
         initGame2();
         startDialogue('game2_intro');
     } else if (currentDialogueSet === dialogueSets.game2_intro) {
-        // Just hide dialogue, user can water
+        // User can water
     } else if (currentDialogueSet === dialogueSets.game2_mid) {
-        // Just hide dialogue, user can collect blue roses
+        // User can collect
     } else if (currentDialogueSet === dialogueSets.game2_complete) {
         currentGame = 3;
         initGame3();
         startDialogue('game3_intro');
     } else if (currentDialogueSet === dialogueSets.game3_intro) {
-        // Just hide dialogue, user can decorate
+        // User can decorate
+    } else if (currentDialogueSet === dialogueSets.game3_complete) {
+        currentGame = 4;
+        startDialogue('final');
+    } else if (currentDialogueSet === dialogueSets.final) {
+        // Show envelope
     }
 }
 
@@ -238,6 +281,8 @@ function mousePressed() {
         mousePressed2();
     } else if (currentGame === 3) {
         mousePressed3();
+    } else if (currentGame === 4) {
+        mousePressed4();
     }
 }
 
@@ -286,7 +331,6 @@ function drawGame1() {
     displayCounter();
     
     if (chocolatesCollected >= TOTAL_CHOCOLATES) {
-        // Trigger dialogue
         startDialogue('game1_complete');
     }
 }
@@ -302,7 +346,7 @@ function mousePressed1() {
 }
 
 function spawnLuvdisc() {
-    let hasChocolate = random() < 1.0 && chocolatesCollected < TOTAL_CHOCOLATES;
+    let hasChocolate = random() < 0.2 && chocolatesCollected < TOTAL_CHOCOLATES;
     luvdiscs.push(new Luvdisc(hasChocolate));
 }
 
@@ -427,10 +471,48 @@ function initGame2() {
     
     wateringPlant = null;
     wateringProgress = 0;
+    roseliaTimer = 0;
+    roseliaCorner = 0;
+    roseliaRotation = 0;
 }
 
 function drawGame2() {
     background(245, 222, 179);
+    
+    // Update Roselia animation
+    roseliaTimer++;
+    if (roseliaTimer > 120) { // Switch corners every 2 seconds
+        roseliaTimer = 0;
+        roseliaCorner = (roseliaCorner + 1) % 4;
+    }
+    
+    // Oscillate rotation between -20 and +20 degrees
+    roseliaRotation += roseliaRotationDirection * 0.5;
+    if (roseliaRotation > 20) roseliaRotationDirection = -1;
+    if (roseliaRotation < -20) roseliaRotationDirection = 1;
+    
+    // Draw Roselia
+    push();
+    let roseliaSize = 150;
+    let roseliaX, roseliaY;
+    if (roseliaCorner === 0) { // Top left
+        roseliaX = roseliaSize / 2 + 20;
+        roseliaY = roseliaSize / 2 + 20;
+    } else if (roseliaCorner === 1) { // Top right
+        roseliaX = width - roseliaSize / 2 - 20;
+        roseliaY = roseliaSize / 2 + 20;
+    } else if (roseliaCorner === 2) { // Bottom right
+        roseliaX = width - roseliaSize / 2 - 20;
+        roseliaY = height - roseliaSize / 2 - 20;
+    } else { // Bottom left
+        roseliaX = roseliaSize / 2 + 20;
+        roseliaY = height - roseliaSize / 2 - 20;
+    }
+    
+    translate(roseliaX, roseliaY);
+    rotate(radians(roseliaRotation));
+    image(roseliaImg, 0, 0, roseliaSize, roseliaSize);
+    pop();
     
     for (let plant of plants) {
         plant.display();
@@ -438,7 +520,6 @@ function drawGame2() {
     
     let allBloomed = plants.every(p => p.stage === 3);
     
-    // Check if we need to trigger mid-game dialogue
     if (allBloomed && game2Phase === 'watering') {
         game2Phase = 'collecting';
         startDialogue('game2_mid');
@@ -590,11 +671,49 @@ function initGame3() {
     prevMouseY = -1;
     icingSliderValue = 1.0;
     icingThickness = BASE_ICING_THICKNESS;
+    alcremieTimer = 0;
+    alcremieCorner = 0;
+    alcremieRotation = 0;
 }
 
 function drawGame3() {
     background(255, 240, 245);
     
+    // Update Alcremie animation
+    alcremieTimer++;
+    if (alcremieTimer > 120) {
+        alcremieTimer = 0;
+        alcremieCorner = (alcremieCorner + 1) % 4;
+    }
+    
+    alcremieRotation += alcremieRotationDirection * 0.5;
+    if (alcremieRotation > 20) alcremieRotationDirection = -1;
+    if (alcremieRotation < -20) alcremieRotationDirection = 1;
+    
+    // Draw Alcremie
+    push();
+    let alcremieSize = 150;
+    let alcremieX, alcremieY;
+    if (alcremieCorner === 0) {
+        alcremieX = alcremieSize / 2 + 20;
+        alcremieY = alcremieSize / 2 + 20;
+    } else if (alcremieCorner === 1) {
+        alcremieX = width - alcremieSize / 2 - 20;
+        alcremieY = alcremieSize / 2 + 20;
+    } else if (alcremieCorner === 2) {
+        alcremieX = width - alcremieSize / 2 - 20;
+        alcremieY = height - alcremieSize / 2 - 20;
+    } else {
+        alcremieX = alcremieSize / 2 + 20;
+        alcremieY = height - alcremieSize / 2 - 20;
+    }
+    
+    translate(alcremieX, alcremieY);
+    rotate(radians(alcremieRotation));
+    image(alcremieImg, 0, 0, alcremieSize, alcremieSize);
+    pop();
+    
+    // Draw cake
     push();
     let cakeX = width / 2;
     let cakeY = height / 2 - 30;
@@ -605,7 +724,6 @@ function drawGame3() {
     imageMode(CORNER);
     image(cakeCanvas, cakeX - CAKE_WIDTH/2, cakeY - CAKE_HEIGHT/2);
     
-    // Strawberries 1.8x bigger (was 120, now 216)
     imageMode(CENTER);
     for (let strawberry of strawberries) {
         image(strawberryImg, strawberry.x, strawberry.y, 216, 216);
@@ -675,7 +793,7 @@ function drawUI() {
     textSize(14);
     text("DONE", doneButtonX, buttonY);
     
-    // Icing thickness slider (only show in icing mode)
+    // Icing thickness slider
     if (decorationMode === 'icing') {
         fill(255);
         stroke(200);
@@ -684,16 +802,13 @@ function drawUI() {
         let sliderY = height - 70;
         let sliderW = 150;
         
-        // Slider background
         rect(sliderX, sliderY - 3, sliderW, 6, 3);
         
-        // Slider handle
         fill(255, 105, 180);
         stroke(255, 50, 150);
         let handleX = sliderX + icingSliderValue * sliderW;
         ellipse(handleX, sliderY, 20, 20);
         
-        // Label
         fill(0);
         noStroke();
         textSize(14);
@@ -711,7 +826,6 @@ function mousePressed3() {
     let resetButtonX = width - 100;
     let doneButtonX = width - 30;
     
-    // Check icing slider
     if (decorationMode === 'icing') {
         let sliderX = 50;
         let sliderY = height - 70;
@@ -724,7 +838,6 @@ function mousePressed3() {
         }
     }
     
-    // Check button clicks
     if (dist(mouseX, mouseY, icingButtonX, buttonY) < 25) {
         decorationMode = 'icing';
         return;
@@ -741,11 +854,10 @@ function mousePressed3() {
     }
     
     if (dist(mouseX, mouseY, doneButtonX, buttonY) < 25) {
-        alert("Beautiful cake, Mao! Happy Valentine's Day! 💖");
+        startDialogue('game3_complete');
         return;
     }
     
-    // Strawberry placement
     if (decorationMode === 'strawberry' && isMouseOnCake()) {
         strawberries.push({x: mouseX, y: mouseY});
     }
@@ -757,7 +869,6 @@ function mousePressed3() {
 }
 
 function mouseDragged3() {
-    // Update slider if dragging it
     if (decorationMode === 'icing') {
         let sliderX = 50;
         let sliderY = height - 70;
@@ -799,7 +910,6 @@ function updateIcingSlider() {
     let sliderX = 50;
     let sliderW = 150;
     icingSliderValue = constrain((mouseX - sliderX) / sliderW, 0, 1);
-    // Map to 0.5x to 3x thickness
     icingThickness = BASE_ICING_THICKNESS * (0.5 + icingSliderValue * 2.5);
 }
 
@@ -816,4 +926,75 @@ function isMouseOnCake() {
            mouseX < cakeX + CAKE_WIDTH/2 && 
            mouseY > cakeY - CAKE_HEIGHT/2 && 
            mouseY < cakeY + CAKE_HEIGHT/2;
+}
+
+// ============================================
+// FINAL SCENE
+// ============================================
+
+function drawFinalScene() {
+    background(255, 240, 245);
+    
+    if (showingMessage) {
+        // Show the letter message
+        push();
+        fill(255, 248, 220);
+        stroke(0);
+        strokeWeight(3);
+        let msgW = width * 0.7;
+        let msgH = height * 0.7;
+        rect(width/2 - msgW/2, height/2 - msgH/2, msgW, msgH, 10);
+        
+        fill(0);
+        noStroke();
+        textSize(24);
+        textAlign(CENTER, CENTER);
+        textFont('Georgia');
+        text("[INSERT MESSAGE]", width/2, height/2);
+        pop();
+    } else {
+        // Show cake with decorations, bouquet, fancy box, and envelope
+        push();
+        let cakeX = width / 2;
+        let cakeY = height / 2;
+        
+        // Draw cake
+        imageMode(CENTER);
+        image(cakeImg, cakeX, cakeY, CAKE_WIDTH, CAKE_HEIGHT);
+        
+        imageMode(CORNER);
+        image(cakeCanvas, cakeX - CAKE_WIDTH/2, cakeY - CAKE_HEIGHT/2);
+        
+        imageMode(CENTER);
+        for (let strawberry of strawberries) {
+            image(strawberryImg, strawberry.x, strawberry.y, 216, 216);
+        }
+        
+        // Draw bouquet (to the right)
+        image(bouquetImg, cakeX + CAKE_WIDTH/2 + 200, cakeY, 300, 300);
+        
+        // Draw fancy box (to the left)
+        image(fancyBoxImg, cakeX - CAKE_WIDTH/2 - 200, cakeY, 300, 300);
+        
+        // Draw envelope (center, big, clickable)
+        image(envelopeImg, width/2, height/2 + 300, 400, 400);
+        
+        pop();
+    }
+}
+
+function mousePressed4() {
+    if (showingMessage) {
+        // Close message
+        showingMessage = false;
+    } else {
+        // Check if envelope was clicked
+        let envX = width / 2;
+        let envY = height / 2 + 300;
+        let envSize = 400;
+        
+        if (dist(mouseX, mouseY, envX, envY) < envSize / 2) {
+            showingMessage = true;
+        }
+    }
 }
