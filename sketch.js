@@ -1,7 +1,7 @@
 // ============================================
 // GLOBAL VARIABLES
 // ============================================
-let currentGame = 1; // 1 = Luvdisc, 2 = Garden
+let currentGame = 1; // 1 = Luvdisc, 2 = Garden, 3 = Cake
 
 // Game 1: Luvdisc variables
 let luvdiscImg, luvdiscChocImg, chocoBoxImg;
@@ -21,7 +21,16 @@ const GRID_SIZE = 3;
 const BLUE_ROSE_COUNT = 4;
 let wateringPlant = null;
 let wateringProgress = 0;
-const WATERING_TIME = 45; // frames to water (1.5 seconds at 60fps)
+const WATERING_TIME = 40;
+
+// Game 3: Cake variables
+let cakeImg, icingImg, strawberryImg;
+let cakeCanvas; // Graphics buffer for drawing
+let decorationMode = 'icing'; // 'icing' or 'strawberry'
+let strawberries = [];
+let prevMouseX, prevMouseY;
+const CAKE_SIZE = 500;
+const ICING_THICKNESS = 15;
 
 // ============================================
 // PRELOAD
@@ -32,15 +41,10 @@ function preload() {
     luvdiscChocImg = loadImage('images/luvdisc_choc.png');
     chocoBoxImg = loadImage('images/choco_box.png');
     
-    // Game 2 images
-    potImg = loadImage('images/pot.png');
-    sproutImg = loadImage('images/sprout.png');
-    growingRedImg = loadImage('images/growing_red.png');
-    growingBlueImg = loadImage('images/growing_blue.png');
-    bloomRedImg = loadImage('images/bloom_red.png');
-    bloomBlueImg = loadImage('images/bloom_blue.png');
-    waterPotImg = loadImage('images/water_pot.png');
-    waterPotPouringImg = loadImage('images/water_pot_pouring.png');
+    // Game 3 images (loading these upfront since they're small)
+    cakeImg = loadImage('images/cake.png');
+    icingImg = loadImage('images/icing.png');
+    strawberryImg = loadImage('images/strawberry.png');
 }
 
 // ============================================
@@ -60,6 +64,8 @@ function draw() {
         drawGame1();
     } else if (currentGame === 2) {
         drawGame2();
+    } else if (currentGame === 3) {
+        drawGame3();
     }
 }
 
@@ -71,12 +77,22 @@ function mousePressed() {
         mousePressed1();
     } else if (currentGame === 2) {
         mousePressed2();
+    } else if (currentGame === 3) {
+        mousePressed3();
     }
 }
 
 function mouseReleased() {
     if (currentGame === 2) {
         mouseReleased2();
+    } else if (currentGame === 3) {
+        mouseReleased3();
+    }
+}
+
+function mouseDragged() {
+    if (currentGame === 3) {
+        mouseDragged3();
     }
 }
 
@@ -91,17 +107,14 @@ function initGame1() {
 }
 
 function drawGame1() {
-    // Background
     background(135, 206, 235);
     
-    // Spawn new luvdiscs
     frameCounter++;
     if (frameCounter >= SPAWN_INTERVAL) {
         spawnLuvdisc();
         frameCounter = 0;
     }
     
-    // Update and display luvdiscs
     for (let i = luvdiscs.length - 1; i >= 0; i--) {
         luvdiscs[i].update();
         luvdiscs[i].display();
@@ -111,17 +124,14 @@ function drawGame1() {
         }
     }
     
-    // Display chocolate counter
     displayCounter();
     
-    // Check if game is complete
     if (chocolatesCollected >= TOTAL_CHOCOLATES) {
         displayGame1Complete();
     }
 }
 
 function mousePressed1() {
-    // Check if "Next Game" button was clicked
     if (chocolatesCollected >= TOTAL_CHOCOLATES) {
         if (mouseX > width/2 - 100 && mouseX < width/2 + 100 &&
             mouseY > height/2 + 40 && mouseY < height/2 + 90) {
@@ -131,7 +141,6 @@ function mousePressed1() {
         }
     }
     
-    // Check if any chocolate luvdisc was clicked
     for (let luvdisc of luvdiscs) {
         if (luvdisc.hasChocolate && luvdisc.isClicked(mouseX, mouseY)) {
             luvdisc.hasChocolate = false;
@@ -142,7 +151,7 @@ function mousePressed1() {
 }
 
 function spawnLuvdisc() {
-    let hasChocolate = random() < 1.0 && chocolatesCollected < TOTAL_CHOCOLATES;
+    let hasChocolate = random() < 0.2 && chocolatesCollected < TOTAL_CHOCOLATES;
     luvdiscs.push(new Luvdisc(hasChocolate));
 }
 
@@ -174,7 +183,6 @@ function displayGame1Complete() {
     textAlign(CENTER, CENTER);
     text("All chocolates collected! 💖", width/2, height/2 - 40);
     
-    // Next Game button
     fill(255, 105, 180);
     stroke(255);
     strokeWeight(3);
@@ -252,13 +260,23 @@ class Luvdisc {
 // ============================================
 
 function initGame2() {
+    // Load images if not already loaded
+    if (!potImg) {
+        potImg = loadImage('images/pot.png');
+        sproutImg = loadImage('images/sprout.png');
+        growingRedImg = loadImage('images/growing_red.png');
+        growingBlueImg = loadImage('images/growing_blue.png');
+        bloomRedImg = loadImage('images/bloom_red.png');
+        bloomBlueImg = loadImage('images/bloom_blue.png');
+        waterPotImg = loadImage('images/water_pot.png');
+        waterPotPouringImg = loadImage('images/water_pot_pouring.png');
+    }
+    
     plants = [];
     
-    // Calculate grid spacing
     let startX = (width - (GRID_SIZE - 1) * 100) / 2;
     let startY = (height - (GRID_SIZE - 1) * 100) / 2;
     
-    // Create array of indices for blue roses
     let blueIndices = [];
     while (blueIndices.length < BLUE_ROSE_COUNT) {
         let idx = floor(random(GRID_SIZE * GRID_SIZE));
@@ -267,7 +285,6 @@ function initGame2() {
         }
     }
     
-    // Create plants in grid
     let idx = 0;
     for (let row = 0; row < GRID_SIZE; row++) {
         for (let col = 0; col < GRID_SIZE; col++) {
@@ -284,17 +301,13 @@ function initGame2() {
 }
 
 function drawGame2() {
-    // Background
-    background(245, 222, 179); // Wheat color
+    background(245, 222, 179);
     
-    // Draw plants
     for (let plant of plants) {
         plant.display();
     }
     
-    // Handle watering
     if (mouseIsPressed) {
-        // Check if hovering over a plant
         let hoveredPlant = null;
         for (let plant of plants) {
             if (plant.isHovered(mouseX, mouseY) && plant.stage < 3) {
@@ -305,19 +318,16 @@ function drawGame2() {
         
         if (hoveredPlant) {
             if (wateringPlant === hoveredPlant) {
-                // Continue watering same plant
                 wateringProgress++;
                 if (wateringProgress >= WATERING_TIME) {
                     hoveredPlant.grow();
                     wateringProgress = 0;
                 }
             } else {
-                // Started watering new plant
                 wateringPlant = hoveredPlant;
                 wateringProgress = 0;
             }
             
-            // Draw progress bar
             drawWateringProgress(hoveredPlant.x, hoveredPlant.y);
         } else {
             wateringPlant = null;
@@ -328,21 +338,38 @@ function drawGame2() {
         wateringProgress = 0;
     }
     
-    // Draw custom cursor (watering can)
-    noCursor();
-    let cursorImg = mouseIsPressed ? waterPotPouringImg : waterPotImg;
-    image(cursorImg, mouseX, mouseY, 60, 60);
-    
-    // Check if all bloomed
+    // Check if all bloomed and all blue roses collected
     let allBloomed = plants.every(p => p.stage === 3);
-    if (allBloomed) {
-        cursor(ARROW); // Show normal cursor for clicking
+    let allBlueCollected = plants.filter(p => p.isBlue).every(p => p.faded && p.alpha <= 0);
+    
+    if (allBloomed && !allBlueCollected) {
+        cursor(ARROW);
+    } else {
+        noCursor();
+        let cursorImg = mouseIsPressed ? waterPotPouringImg : waterPotImg;
+        image(cursorImg, mouseX, mouseY, 60, 60);
+    }
+    
+    if (allBloomed && allBlueCollected) {
+        displayGame2Complete();
     }
 }
 
 function mousePressed2() {
-    // Check if clicking on bloomed blue roses
+    // Check for next game button
     let allBloomed = plants.every(p => p.stage === 3);
+    let allBlueCollected = plants.filter(p => p.isBlue).every(p => p.faded && p.alpha <= 0);
+    
+    if (allBloomed && allBlueCollected) {
+        if (mouseX > width/2 - 100 && mouseX < width/2 + 100 &&
+            mouseY > height/2 + 40 && mouseY < height/2 + 90) {
+            currentGame = 3;
+            initGame3();
+            return;
+        }
+    }
+    
+    // Check if clicking on bloomed blue roses
     if (allBloomed) {
         for (let plant of plants) {
             if (plant.isBlue && !plant.faded && plant.isHovered(mouseX, mouseY)) {
@@ -362,16 +389,36 @@ function drawWateringProgress(x, y) {
     let barWidth = 80;
     let barHeight = 10;
     
-    // Background bar
     fill(200);
     noStroke();
     rect(x - barWidth/2, y - 60, barWidth, barHeight, 5);
     
-    // Progress bar
     fill(100, 150, 255);
     let progress = wateringProgress / WATERING_TIME;
     rect(x - barWidth/2, y - 60, barWidth * progress, barHeight, 5);
     
+    pop();
+}
+
+function displayGame2Complete() {
+    push();
+    fill(0, 0, 0, 150);
+    rect(0, 0, width, height);
+    
+    fill(255);
+    textSize(48);
+    textAlign(CENTER, CENTER);
+    text("You've collected the red roses! 🌹", width/2, height/2 - 40);
+    
+    fill(255, 105, 180);
+    stroke(255);
+    strokeWeight(3);
+    rect(width/2 - 100, height/2 + 40, 200, 50, 10);
+    
+    fill(255);
+    noStroke();
+    textSize(24);
+    text("Next Game →", width/2, height/2 + 65);
     pop();
 }
 
@@ -380,7 +427,7 @@ class Plant {
         this.x = x;
         this.y = y;
         this.isBlue = isBlue;
-        this.stage = 0; // 0=pot, 1=sprout, 2=growing, 3=bloom
+        this.stage = 0;
         this.size = 80;
         this.faded = false;
         this.alpha = 255;
@@ -399,14 +446,12 @@ class Plant {
     display() {
         push();
         
-        // Handle fading
         if (this.faded && this.alpha > 0) {
             this.alpha -= 5;
         }
         
         tint(255, this.alpha);
         
-        // Draw appropriate sprite based on stage
         let img;
         if (this.stage === 0) {
             img = potImg;
@@ -427,4 +472,151 @@ class Plant {
         let d = dist(mx, my, this.x, this.y);
         return d < this.size / 2;
     }
+}
+
+// ============================================
+// GAME 3: CAKE DECORATING
+// ============================================
+
+function initGame3() {
+    // Create graphics buffer for cake decorations
+    cakeCanvas = createGraphics(CAKE_SIZE, CAKE_SIZE);
+    cakeCanvas.clear();
+    
+    decorationMode = 'icing';
+    strawberries = [];
+    prevMouseX = -1;
+    prevMouseY = -1;
+}
+
+function drawGame3() {
+    background(255, 240, 245); // Light pink
+    
+    push();
+    // Center the cake
+    let cakeX = width / 2;
+    let cakeY = height / 2 - 20;
+    
+    // Draw cake base
+    imageMode(CENTER);
+    image(cakeImg, cakeX, cakeY, CAKE_SIZE, CAKE_SIZE);
+    
+    // Draw decorations on top
+    imageMode(CORNER);
+    image(cakeCanvas, cakeX - CAKE_SIZE/2, cakeY - CAKE_SIZE/2);
+    
+    // Draw strawberries
+    imageMode(CENTER);
+    for (let strawberry of strawberries) {
+        image(strawberryImg, strawberry.x, strawberry.y, 30, 30);
+    }
+    
+    pop();
+    
+    // Draw UI buttons
+    drawUI();
+    
+    // Custom cursor for icing mode
+    if (decorationMode === 'icing' && isMouseOnCake()) {
+        noCursor();
+        image(icingImg, mouseX, mouseY, 40, 40);
+    } else {
+        cursor(ARROW);
+    }
+}
+
+function drawUI() {
+    push();
+    
+    let buttonY = height - 70;
+    let icingButtonX = width - 140;
+    let strawberryButtonX = width - 70;
+    
+    // Icing button
+    if (decorationMode === 'icing') {
+        fill(255, 105, 180);
+        stroke(255, 50, 150);
+    } else {
+        fill(255);
+        stroke(200);
+    }
+    strokeWeight(3);
+    rect(icingButtonX - 25, buttonY - 25, 50, 50, 5);
+    image(icingImg, icingButtonX, buttonY, 35, 35);
+    
+    // Strawberry button
+    if (decorationMode === 'strawberry') {
+        fill(255, 105, 180);
+        stroke(255, 50, 150);
+    } else {
+        fill(255);
+        stroke(200);
+    }
+    rect(strawberryButtonX - 25, buttonY - 25, 50, 50, 5);
+    image(strawberryImg, strawberryButtonX, buttonY, 35, 35);
+    
+    pop();
+}
+
+function mousePressed3() {
+    let buttonY = height - 70;
+    let icingButtonX = width - 140;
+    let strawberryButtonX = width - 70;
+    
+    // Check button clicks
+    if (dist(mouseX, mouseY, icingButtonX, buttonY) < 25) {
+        decorationMode = 'icing';
+        return;
+    }
+    
+    if (dist(mouseX, mouseY, strawberryButtonX, buttonY) < 25) {
+        decorationMode = 'strawberry';
+        return;
+    }
+    
+    // Strawberry placement
+    if (decorationMode === 'strawberry' && isMouseOnCake()) {
+        strawberries.push({x: mouseX, y: mouseY});
+    }
+    
+    // Set previous position for icing
+    if (decorationMode === 'icing') {
+        prevMouseX = mouseX;
+        prevMouseY = mouseY;
+    }
+}
+
+function mouseDragged3() {
+    if (decorationMode === 'icing' && isMouseOnCake()) {
+        // Convert screen coordinates to canvas coordinates
+        let cakeX = width / 2;
+        let cakeY = height / 2 - 20;
+        
+        let canvasX = mouseX - (cakeX - CAKE_SIZE/2);
+        let canvasY = mouseY - (cakeY - CAKE_SIZE/2);
+        let prevCanvasX = prevMouseX - (cakeX - CAKE_SIZE/2);
+        let prevCanvasY = prevMouseY - (cakeY - CAKE_SIZE/2);
+        
+        if (prevMouseX !== -1 && prevMouseY !== -1) {
+            cakeCanvas.stroke(255);
+            cakeCanvas.strokeWeight(ICING_THICKNESS);
+            cakeCanvas.strokeCap(ROUND);
+            cakeCanvas.line(prevCanvasX, prevCanvasY, canvasX, canvasY);
+        }
+        
+        prevMouseX = mouseX;
+        prevMouseY = mouseY;
+    }
+}
+
+function mouseReleased3() {
+    prevMouseX = -1;
+    prevMouseY = -1;
+}
+
+function isMouseOnCake() {
+    let cakeX = width / 2;
+    let cakeY = height / 2 - 20;
+    let d = dist(mouseX, mouseY, cakeX, cakeY);
+    return d < CAKE_SIZE / 2;
 }
