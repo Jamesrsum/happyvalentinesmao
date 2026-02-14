@@ -955,22 +955,64 @@ function drawFinalScene() {
     background(255, 240, 245);
     
     if (showingMessage) {
-        // Show the letter message - CENTERED on pink background
+        // Show the letter message
         push();
         fill(255, 248, 220);
         stroke(0);
         strokeWeight(3);
-        let msgW = width * 0.7;
-        let msgH = height * 0.7;
-        rectMode(CENTER);
-        rect(width/2, height/2, msgW, msgH, 10);
+        let msgW = width * 0.8;
+        let msgH = height * 0.8;
+        let msgX = width/2 - msgW/2;
+        let msgY = height/2 - msgH/2;
+        rect(msgX, msgY, msgW, msgH, 10);
         
         fill(0);
         noStroke();
-        textSize(24);
-        textAlign(CENTER, CENTER);
+        textSize(20);
+        textAlign(LEFT, TOP);
         textFont('Georgia');
-        text(final_message, width/2, height/2);
+        
+        // Word wrap the message
+        let margin = 40;
+        let maxWidth = msgW - margin * 2;
+        let lines = [];
+        let paragraphs = final_message.split('\n');
+        
+        for (let paragraph of paragraphs) {
+            if (paragraph.trim() === '') {
+                lines.push(''); // Empty line for spacing
+                continue;
+            }
+            
+            let words = paragraph.split(' ');
+            let line = '';
+            
+            for (let word of words) {
+                let testLine = line + word + ' ';
+                let testWidth = textWidth(testLine);
+                if (testWidth > maxWidth && line.length > 0) {
+                    lines.push(line);
+                    line = word + ' ';
+                } else {
+                    line = testLine;
+                }
+            }
+            lines.push(line);
+        }
+        
+        // Draw the lines
+        let y = msgY + margin;
+        let lineHeight = 28;
+        for (let i = 0; i < lines.length; i++) {
+            text(lines[i], msgX + margin, y + i * lineHeight);
+        }
+        
+        // Add "Click to close" at bottom
+        fill(100);
+        textSize(16);
+        textAlign(CENTER, BOTTOM);
+        text("Click anywhere to close", width/2, msgY + msgH - 20);
+        
         pop();
     } else {
         // Show just the envelope - big and centered
