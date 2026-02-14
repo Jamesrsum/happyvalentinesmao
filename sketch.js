@@ -970,7 +970,7 @@ function drawFinalScene() {
         textSize(24);
         textAlign(CENTER, CENTER);
         textFont('Georgia');
-        text("[INSERT MESSAGE]", width/2, height/2);
+        text(final_message, width/2, height/2);
         pop();
     } else {
         // Show just the envelope - big and centered
