@@ -6,9 +6,18 @@ const SPAWN_INTERVAL = 60; // frames between spawns
 let frameCounter = 0;
 
 function preload() {
-    luvdiscImg = loadImage('images/luvdisc.png');
-    luvdiscChocImg = loadImage('images/luvdisc_choc.png');
-    chocoBoxImg = loadImage('images/choco_box.png');
+    luvdiscImg = loadImage('images/luvdisc.png', 
+        () => console.log('✓ Luvdisc loaded'),
+        () => console.log('✗ Luvdisc FAILED')
+    );
+    luvdiscChocImg = loadImage('images/luvdisc_choc.png',
+        () => console.log('✓ Luvdisc choc loaded'),
+        () => console.log('✗ Luvdisc choc FAILED')
+    );
+    chocoBoxImg = loadImage('images/choco_box.png',
+        () => console.log('✓ Choco box loaded'),
+        () => console.log('✗ Choco box FAILED')
+    );
 }
 
 function setup() {
