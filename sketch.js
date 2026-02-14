@@ -17,11 +17,11 @@ let growingRedImg, growingBlueImg;
 let bloomRedImg, bloomBlueImg;
 let waterPotImg, waterPotPouringImg;
 let plants = [];
-const GRID_SIZE = 5;
-const BLUE_ROSE_COUNT = 8;
+const GRID_SIZE = 3;
+const BLUE_ROSE_COUNT = 4;
 let wateringPlant = null;
 let wateringProgress = 0;
-const WATERING_TIME = 90;
+const WATERING_TIME = 35;
 
 // Game 3: Cake variables
 let cakeImg, icingImg, strawberryImg;
@@ -158,7 +158,7 @@ function mousePressed1() {
 }
 
 function spawnLuvdisc() {
-    let hasChocolate = random() < 0.2 && chocolatesCollected < TOTAL_CHOCOLATES;
+    let hasChocolate = random() < 1.0 && chocolatesCollected < TOTAL_CHOCOLATES;
     luvdiscs.push(new Luvdisc(hasChocolate));
 }
 
