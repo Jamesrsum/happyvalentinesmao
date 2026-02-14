@@ -165,8 +165,16 @@ class Luvdisc {
         let squish = 1 + sin(this.swimPhase) * 0.05;
         scale(1, squish);
         
-        // Draw appropriate sprite
-        let img = this.hasChocolate ? luvdiscChocImg : luvdiscImg;
+        // TESTING: Force chocolate image for ALL luvdiscs
+        let img = luvdiscChocImg;
+        
+        // Draw a colored circle behind to see which have chocolate
+        if (this.hasChocolate) {
+            fill(255, 0, 0, 100); // Red circle for chocolate ones
+            noStroke();
+            ellipse(0, 0, this.size + 10, this.size + 10);
+        }
+        
         image(img, 0, 0, this.size, this.size);
         
         pop();
