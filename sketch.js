@@ -17,11 +17,11 @@ let growingRedImg, growingBlueImg;
 let bloomRedImg, bloomBlueImg;
 let waterPotImg, waterPotPouringImg;
 let plants = [];
-const GRID_SIZE = 3;
-const BLUE_ROSE_COUNT = 4;
+const GRID_SIZE = 5;
+const BLUE_ROSE_COUNT = 8;
 let wateringPlant = null;
 let wateringProgress = 0;
-const WATERING_TIME = 40;
+const WATERING_TIME = 90;
 
 // Game 3: Cake variables
 let cakeImg, icingImg, strawberryImg;
@@ -29,8 +29,9 @@ let cakeCanvas; // Graphics buffer for drawing
 let decorationMode = 'icing'; // 'icing' or 'strawberry'
 let strawberries = [];
 let prevMouseX, prevMouseY;
-const CAKE_SIZE = 500;
-const ICING_THICKNESS = 15;
+const CAKE_WIDTH = 600;
+const CAKE_HEIGHT = 500;
+const ICING_THICKNESS = 18; // 20% thicker than before (was 15)
 
 // ============================================
 // PRELOAD
@@ -51,9 +52,15 @@ function preload() {
 // SETUP
 // ============================================
 function setup() {
-    createCanvas(800, 600);
+    // Make canvas fill most of the window, leaving some space at top
+    createCanvas(windowWidth, windowHeight - 50);
     imageMode(CENTER);
     initGame1();
+}
+
+// Resize canvas when window is resized
+function windowResized() {
+    resizeCanvas(windowWidth, windowHeight - 50);
 }
 
 // ============================================
@@ -274,8 +281,10 @@ function initGame2() {
     
     plants = [];
     
-    let startX = (width - (GRID_SIZE - 1) * 100) / 2;
-    let startY = (height - (GRID_SIZE - 1) * 100) / 2;
+    // Dynamic spacing based on window size
+    let spacing = min(width, height) / 7;
+    let startX = (width - (GRID_SIZE - 1) * spacing) / 2;
+    let startY = (height - (GRID_SIZE - 1) * spacing) / 2;
     
     let blueIndices = [];
     while (blueIndices.length < BLUE_ROSE_COUNT) {
@@ -288,8 +297,8 @@ function initGame2() {
     let idx = 0;
     for (let row = 0; row < GRID_SIZE; row++) {
         for (let col = 0; col < GRID_SIZE; col++) {
-            let x = startX + col * 100;
-            let y = startY + row * 100;
+            let x = startX + col * spacing;
+            let y = startY + row * spacing;
             let isBlue = blueIndices.includes(idx);
             plants.push(new Plant(x, y, isBlue));
             idx++;
@@ -479,8 +488,8 @@ class Plant {
 // ============================================
 
 function initGame3() {
-    // Create graphics buffer for cake decorations
-    cakeCanvas = createGraphics(CAKE_SIZE, CAKE_SIZE);
+    // Create graphics buffer for cake decorations (wider than tall)
+    cakeCanvas = createGraphics(CAKE_WIDTH, CAKE_HEIGHT);
     cakeCanvas.clear();
     
     decorationMode = 'icing';
@@ -495,20 +504,20 @@ function drawGame3() {
     push();
     // Center the cake
     let cakeX = width / 2;
-    let cakeY = height / 2 - 20;
+    let cakeY = height / 2;
     
-    // Draw cake base
+    // Draw cake base (wider aspect ratio)
     imageMode(CENTER);
-    image(cakeImg, cakeX, cakeY, CAKE_SIZE, CAKE_SIZE);
+    image(cakeImg, cakeX, cakeY, CAKE_WIDTH, CAKE_HEIGHT);
     
     // Draw decorations on top
     imageMode(CORNER);
-    image(cakeCanvas, cakeX - CAKE_SIZE/2, cakeY - CAKE_SIZE/2);
+    image(cakeCanvas, cakeX - CAKE_WIDTH/2, cakeY - CAKE_HEIGHT/2);
     
-    // Draw strawberries
+    // Draw strawberries (4x bigger than before - was 30, now 120)
     imageMode(CENTER);
     for (let strawberry of strawberries) {
-        image(strawberryImg, strawberry.x, strawberry.y, 30, 30);
+        image(strawberryImg, strawberry.x, strawberry.y, 120, 120);
     }
     
     pop();
@@ -590,12 +599,12 @@ function mouseDragged3() {
     if (decorationMode === 'icing' && isMouseOnCake()) {
         // Convert screen coordinates to canvas coordinates
         let cakeX = width / 2;
-        let cakeY = height / 2 - 20;
+        let cakeY = height / 2;
         
-        let canvasX = mouseX - (cakeX - CAKE_SIZE/2);
-        let canvasY = mouseY - (cakeY - CAKE_SIZE/2);
-        let prevCanvasX = prevMouseX - (cakeX - CAKE_SIZE/2);
-        let prevCanvasY = prevMouseY - (cakeY - CAKE_SIZE/2);
+        let canvasX = mouseX - (cakeX - CAKE_WIDTH/2);
+        let canvasY = mouseY - (cakeY - CAKE_HEIGHT/2);
+        let prevCanvasX = prevMouseX - (cakeX - CAKE_WIDTH/2);
+        let prevCanvasY = prevMouseY - (cakeY - CAKE_HEIGHT/2);
         
         if (prevMouseX !== -1 && prevMouseY !== -1) {
             cakeCanvas.stroke(255);
@@ -616,7 +625,11 @@ function mouseReleased3() {
 
 function isMouseOnCake() {
     let cakeX = width / 2;
-    let cakeY = height / 2 - 20;
-    let d = dist(mouseX, mouseY, cakeX, cakeY);
-    return d < CAKE_SIZE / 2;
+    let cakeY = height / 2;
+    
+    // Check if mouse is within the rectangular cake bounds
+    return mouseX > cakeX - CAKE_WIDTH/2 && 
+           mouseX < cakeX + CAKE_WIDTH/2 && 
+           mouseY > cakeY - CAKE_HEIGHT/2 && 
+           mouseY < cakeY + CAKE_HEIGHT/2;
 }
