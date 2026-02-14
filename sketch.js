@@ -936,14 +936,15 @@ function drawFinalScene() {
     background(255, 240, 245);
     
     if (showingMessage) {
-        // Show the letter message
+        // Show the letter message - CENTERED
         push();
         fill(255, 248, 220);
         stroke(0);
         strokeWeight(3);
         let msgW = width * 0.7;
         let msgH = height * 0.7;
-        rect(width/2 - msgW/2, height/2 - msgH/2, msgW, msgH, 10);
+        rectMode(CENTER); // Use CENTER mode for proper centering
+        rect(width/2, height/2, msgW, msgH, 10);
         
         fill(0);
         noStroke();
@@ -955,29 +956,35 @@ function drawFinalScene() {
     } else {
         // Show cake with decorations, bouquet, fancy box, and envelope
         push();
+        
+        // Calculate positions - cake needs to be higher to make room for envelope
         let cakeX = width / 2;
-        let cakeY = height / 2;
+        let cakeY = height / 2 - 150; // Moved up
         
         // Draw cake
         imageMode(CENTER);
         image(cakeImg, cakeX, cakeY, CAKE_WIDTH, CAKE_HEIGHT);
         
+        // Draw cake decorations
         imageMode(CORNER);
         image(cakeCanvas, cakeX - CAKE_WIDTH/2, cakeY - CAKE_HEIGHT/2);
         
+        // Draw strawberries (need to adjust their positions too)
         imageMode(CENTER);
         for (let strawberry of strawberries) {
-            image(strawberryImg, strawberry.x, strawberry.y, 216, 216);
+            // Strawberries were placed relative to old cake position, adjust them
+            let adjustedY = strawberry.y - 150;
+            image(strawberryImg, strawberry.x, adjustedY, 216, 216);
         }
         
-        // Draw bouquet (to the right)
-        image(bouquetImg, cakeX + CAKE_WIDTH/2 + 200, cakeY, 300, 300);
+        // Draw bouquet (to the right of cake)
+        image(bouquetImg, cakeX + CAKE_WIDTH/2 + 150, cakeY, 300, 300);
         
-        // Draw fancy box (to the left)
-        image(fancyBoxImg, cakeX - CAKE_WIDTH/2 - 200, cakeY, 300, 300);
+        // Draw fancy box (to the left of cake)
+        image(fancyBoxImg, cakeX - CAKE_WIDTH/2 - 150, cakeY, 300, 300);
         
-        // Draw envelope (center, big, clickable)
-        image(envelopeImg, width/2, height/2 + 300, 400, 400);
+        // Draw envelope (below cake, centered)
+        image(envelopeImg, width/2, cakeY + CAKE_HEIGHT/2 + 250, 400, 400);
         
         pop();
     }
